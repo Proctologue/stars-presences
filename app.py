@@ -17,43 +17,62 @@ def index():
 @app.route('/sauvegarder', methods=['POST'])
 def sauvegarder():
     data = request.json
-    nom = data['nom']
-    date_str = data['date']
-    selections = data['selections']
+    nom = data.get('nom')
+    date_str = data.get('date')
+    selections = data.get('selections', {})
+
+    if not nom or not date_str:
+        return jsonify({"success": False, "message": "Données manquantes"})
 
     try:
         date = datetime.strptime(date_str, "%Y-%m-%d")
-        jour_str = date.strftime("%d/%m/%Y")
+        sheet_name = {1:"Janvier",2:"Février",3:"Mars",4:"Avril",5:"Mai",6:"Juin",
+                      7:"Juillet",8:"Aout",9:"Septembre",10:"Octobre",11:"Novembre",12:"Decembre"}[date.month]
+        jour = date.day
     except:
         return jsonify({"success": False, "message": "Date invalide"})
 
     wb = load_workbook(EXCEL_FILE)
-    sheet = wb.active  # On utilise la feuille "Planning"
+    sheet = wb[sheet_name]
 
-    # Trouver la ligne du nom + date
-    row = None
-    for r in range(2, 500):
-        if sheet.cell(row=r, column=1).value == jour_str and sheet.cell(row=r, column=2).value == nom:
-            row = r
-            break
+    # Recherche nom
+    row_nom = None
+    for r in range(1, 100):
+        for c in range(1, 6):
+            if str(sheet.cell(row=r, column=c).value or "").strip() == nom:
+                row_nom = r
+                break
+        if row_nom: break
 
-    if not row:
-        # Créer une nouvelle ligne si elle n'existe pas
-        row = sheet.max_row + 1
-        sheet.cell(row=row, column=1, value=jour_str)
-        sheet.cell(row=row, column=2, value=nom)
+    if not row_nom:
+        return jsonify({"success": False, "message": f"Nom '{nom}' non trouvé"})
 
-    # Mise à jour des disponibilités
-    if selections.get("Matin") == "DISPO":
-        sheet.cell(row=row, column=3, value="D")
-    if selections.get("Après-midi") == "DISPO":
-        sheet.cell(row=row, column=4, value="D")
-    if selections.get("Soir") == "DISPO":
-        sheet.cell(row=row, column=5, value="D")
+    # Recherche jour
+    col_m = None
+    for r in range(1, 30):
+        for c in range(1, 400):
+            val = sheet.cell(row=r, column=c).value
+            if val and str(val).strip().isdigit() and int(float(val)) == jour:
+                col_m = c
+                break
+        if col_m: break
+
+    if not col_m:
+        return jsonify({"success": False, "message": f"Jour {jour} non trouvé"})
+
+    # Enregistrement
+    for slot, choix in selections.items():
+        valeur = "D" if choix == "DISPO" else "X"
+        if slot == "Matin":
+            sheet.cell(row=row_nom, column=col_m, value=valeur)
+        elif slot == "Après-midi":
+            sheet.cell(row=row_nom, column=col_m+1, value=valeur)
+        elif slot == "Soir":
+            sheet.cell(row=row_nom, column=col_m+2, value=valeur)
 
     wb.save(EXCEL_FILE)
-    return jsonify({"success": True, "message": f"✅ Enregistré le {date.strftime('%d/%m/%Y')}"})
+    return jsonify({"success": True, "message": f"✅ Enregistré le {jour}/{date.month}"})
 
 if __name__ == '__main__':
-    print("🚀 Application démarrée avec fichier propre")
+    print("🚀 Application minimale démarrée")
     app.run(host='0.0.0.0', port=5000, debug=True)
