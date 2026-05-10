@@ -14,9 +14,9 @@
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
       background: white; padding: 25px; border-radius: 15px; 
       box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10000; 
-      width: 92%; max-width: 420px; max-height: 90vh; overflow-y: auto;
+      width: 92%; max-width: 420px;
     }
-    select, button { padding: 14px; margin: 8px 0; width: 100%; border-radius: 10px; font-size: 17px; }
+    select, button { padding: 14px; margin: 10px 0; width: 100%; border-radius: 10px; font-size: 17px; }
     button { background: #1a73e8; color: white; font-weight: bold; border: none; }
   </style>
 </head>
@@ -46,19 +46,15 @@
       calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
         initialView: 'dayGridMonth',
         locale: 'fr',
-        selectable: true,
-        selectMirror: true,
         height: 'auto',
         headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-        select: function(info) {
+        dateClick: function(info) {          // ← Changement important ici
           currentNom = document.getElementById('nomSelect').value;
           if (!currentNom) {
             alert("⚠️ Veuillez d'abord choisir votre nom !");
-            calendar.unselect();
             return;
           }
-          showModal(info.startStr);
-          calendar.unselect();   // Pour éviter le clignotement
+          showModal(info.dateStr);
         }
       });
       calendar.render();
@@ -67,7 +63,7 @@
     function showModal(dateStr) {
       let html = `
         <div class="modal">
-          <h2 style="margin-top:0;">${dateStr}</h2>
+          <h2>${dateStr}</h2>
           <label><input type="checkbox" id="tout" onchange="toggleTout()"> <strong>Toute la journée</strong></label><br><br>
           
           <div id="slots">
@@ -106,11 +102,9 @@
         body: JSON.stringify({nom: currentNom, date: dateStr, selections})
       })
       .then(r => r.json())
-      .then(data => {
-        alert(data.message || "✅ Enregistré avec succès !");
-        closeModal();
-      })
+      .then(data => alert(data.message || "✅ Enregistré !"))
       .catch(() => alert("Erreur de connexion"));
+      closeModal();
     };
 
     window.closeModal = function() {
