@@ -7,38 +7,24 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      background: #f4f4f4; 
-      margin: 0; 
-      padding: 10px; 
-    }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 10px; }
     h1 { text-align: center; color: #1a73e8; margin: 15px 0; }
-    #calendar { 
-      max-width: 100%; 
-      margin: 0 auto; 
-      background: white; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-      padding: 8px;
-    }
+    #calendar { max-width: 100%; margin: 0 auto; background: white; border-radius: 12px; padding: 8px; }
     .modal { 
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
       background: white; padding: 25px; border-radius: 15px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; 
-      width: 92%; max-width: 420px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10000; 
+      width: 92%; max-width: 420px; max-height: 90vh; overflow-y: auto;
     }
-    select, button { padding: 14px; margin: 10px 0; width: 100%; border-radius: 10px; font-size: 17px; }
+    select, button { padding: 14px; margin: 8px 0; width: 100%; border-radius: 10px; font-size: 17px; }
     button { background: #1a73e8; color: white; font-weight: bold; border: none; }
-    .fc { font-size: 14px; }
-    .fc-daygrid-day { cursor: pointer; }
   </style>
 </head>
 <body>
   <h1>🌟 Mes Disponibilités</h1>
   
-  <div style="text-align:center; margin-bottom:15px;">
-    <select id="nomSelect" style="padding:14px; font-size:18px; width:95%; max-width:400px;">
+  <div style="text-align:center; margin:15px 0;">
+    <select id="nomSelect" style="padding:14px; font-size:18px; width:95%;">
     </select>
   </div>
 
@@ -61,29 +47,27 @@
         initialView: 'dayGridMonth',
         locale: 'fr',
         selectable: true,
+        selectMirror: true,
         height: 'auto',
-        headerToolbar: { 
-          left: 'prev,next today', 
-          center: 'title', 
-          right: '' 
-        },
+        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
         select: function(info) {
           currentNom = document.getElementById('nomSelect').value;
           if (!currentNom) {
             alert("⚠️ Veuillez d'abord choisir votre nom !");
+            calendar.unselect();
             return;
           }
           showModal(info.startStr);
+          calendar.unselect();   // Pour éviter le clignotement
         }
       });
       calendar.render();
     });
 
-    // Le reste du code (modal) reste le même que avant
     function showModal(dateStr) {
       let html = `
         <div class="modal">
-          <h2>${dateStr}</h2>
+          <h2 style="margin-top:0;">${dateStr}</h2>
           <label><input type="checkbox" id="tout" onchange="toggleTout()"> <strong>Toute la journée</strong></label><br><br>
           
           <div id="slots">
@@ -123,9 +107,10 @@
       })
       .then(r => r.json())
       .then(data => {
-        alert(data.message || "✅ Enregistré !");
+        alert(data.message || "✅ Enregistré avec succès !");
         closeModal();
-      });
+      })
+      .catch(() => alert("Erreur de connexion"));
     };
 
     window.closeModal = function() {
