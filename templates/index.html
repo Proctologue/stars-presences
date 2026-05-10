@@ -9,10 +9,7 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 10px; }
     h1 { text-align: center; color: #1a73e8; margin: 15px 0; }
-    .btn { 
-      padding: 14px 20px; margin: 8px 4px; border-radius: 12px; font-size: 17px; 
-      border: none; cursor: pointer; font-weight: bold; width: 48%;
-    }
+    .btn { padding: 14px 20px; margin: 8px 4px; border-radius: 12px; font-size: 17px; border: none; cursor: pointer; font-weight: bold; width: 48%; }
     .btn-primary { background: #1a73e8; color: white; }
     .btn-success { background: #28a745; color: white; }
     #calendar { max-width: 100%; margin: 15px auto; background: white; border-radius: 12px; padding: 8px; }
@@ -20,10 +17,12 @@
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
       background: white; padding: 25px; border-radius: 15px; 
       box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10000; 
-      width: 92%; max-width: 420px; max-height: 85vh; overflow-y: auto;
+      width: 95%; max-width: 460px; max-height: 85vh; overflow-y: auto;
     }
-    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    select, button { padding: 15px; margin: 10px 0; width: 100%; border-radius: 10px; font-size: 17px; }
+    button { background: #1a73e8; color: white; font-weight: bold; border: none; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 15px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
     th { background: #1a73e8; color: white; }
   </style>
 </head>
@@ -78,7 +77,7 @@
     function showModal(dateStr) {
       let html = `
         <div class="modal">
-          <h2>${dateStr}</h2>
+          <h2 style="margin:0 0 20px 0;">${dateStr}</h2>
           <label><input type="checkbox" id="tout" onchange="toggleTout()"> <strong>Toute la journée</strong></label><br><br>
           
           <div id="slots">
@@ -127,9 +126,9 @@
       document.querySelectorAll('.modal').forEach(m => m.remove());
     };
 
-    // Fonction pour voir le planning
+    // Voir le Planning (tableau simple)
     window.voirPlanning = function() {
-      alert("📊 Fonction 'Voir le Planning Actuel' en cours de développement...\n\nPour l'instant, téléchargez le fichier Excel via Render.");
+      alert("📊 La fonction 'Voir le Planning' complet est en cours de développement.\n\nPour l'instant, tu peux télécharger le fichier Excel sur Render.");
     };
   </script>
 </body>
