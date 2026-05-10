@@ -115,7 +115,28 @@ def sauvegarder():
 
     wb.save(EXCEL_FILE)
     return jsonify({"success": True, "message": f"✅ Enregistré pour le {jour}/{date.month}"})
-
+  
+@app.route('/planning')
+def get_planning():
+    try:
+        wb = load_workbook(EXCEL_FILE, data_only=True)
+        data = {}
+        
+        for sheet_name in mois_feuilles.values():
+            if sheet_name in wb:
+                sheet = wb[sheet_name]
+                rows = []
+                for r in range(10, 30):  # Lignes des stars
+                    row = []
+                    for c in range(1, 40):
+                        val = sheet.cell(row=r, column=c).value
+                        row.append(val if val is not None else "")
+                    if any(row):  # Si la ligne n'est pas vide
+                        rows.append(row)
+                data[sheet_name] = rows
+        return jsonify({"success": True, "data": data})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
 if __name__ == '__main__':
     print("🚀 Application démarrée sur http://127.0.0.1:5000")
     app.run(host='0.0.0.0', port=5000, debug=True)
