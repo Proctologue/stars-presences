@@ -6,33 +6,33 @@ import os
 
 app = Flask(__name__)
 
-# Chemin du fichier Excel
 EXCEL_FILE = os.path.join(os.path.dirname(__file__), "stars 3.xlsx")
 
-mois_feuilles = {
-    1:"Janvier", 2:"Février", 3:"Mars", 4:"Avril", 5:"Mai", 6:"Juin",
-    7:"Juillet", 8:"Aout", 9:"Septembre", 10:"Octobre", 11:"Novembre", 12:"Decembre"
-}
+mois_feuilles = {1:"Janvier",2:"Février",3:"Mars",4:"Avril",5:"Mai",6:"Juin",
+                 7:"Juillet",8:"Aout",9:"Septembre",10:"Octobre",11:"Novembre",12:"Decembre"}
 
 def get_noms():
     try:
         wb = load_workbook(EXCEL_FILE, data_only=True)
         sheet = wb["Noms des employés"]
         noms = []
-        for r in range(1, 30):
+        for r in range(1, 50):
             cell = sheet.cell(row=r, column=1).value
             if cell:
                 nom = str(cell).strip()
                 if nom and nom not in ["Noms des employés", ""]:
                     noms.append(nom)
+        print(f"✅ {len(noms)} noms chargés : {noms}")
         return noms
-    except:
+    except Exception as e:
+        print(f"Erreur noms : {e}")
         return ["Chloé", "Dorian", "Francky", "Jeremy", "Laurence", "Pouncho !"]
 
 @app.route('/')
 def index():
     return render_template('index.html', noms=get_noms())
 
+# ================== LE RESTE DU CODE ==================
 def trouver_colonne_jour(sheet, jour):
     for row in range(1, 25):
         for col in range(1, 400):
@@ -67,7 +67,6 @@ def sauvegarder():
     wb = load_workbook(EXCEL_FILE)
     sheet = wb[sheet_name]
 
-    # Recherche du nom
     row_nom = None
     nom_clean = str(nom).strip().lower()
     for r in range(1, 100):
@@ -84,9 +83,8 @@ def sauvegarder():
 
     col_m = trouver_colonne_jour(sheet, jour)
     if not col_m:
-        return jsonify({"success": False, "message": f"Jour {jour} non trouvé dans {sheet_name}"})
+        return jsonify({"success": False, "message": f"Jour {jour} non trouvé"})
 
-    # Mise à jour
     for slot, choix in selections.items():
         valeur = "D" if choix == "DISPO" else "X"
         if slot == "Matin":
@@ -104,27 +102,19 @@ def get_planning():
     try:
         wb = load_workbook(EXCEL_FILE, data_only=True)
         html = "<h1>📊 Planning Complet 2026</h1>"
-        
         for sheet_name in mois_feuilles.values():
-            if sheet_name not in wb:
-                continue
+            if sheet_name not in wb: continue
             sheet = wb[sheet_name]
-            html += f"<h2>{sheet_name}</h2>"
-            html += "<table border='1' style='border-collapse:collapse; width:100%;'>"
+            html += f"<h2>{sheet_name}</h2><table border='1' style='border-collapse:collapse;width:100%'>"
             html += "<tr><th>Nom</th>"
-            
-            # En-têtes jours
             for c in range(2, 100, 3):
                 jour = sheet.cell(row=8, column=c).value
                 if jour and str(jour).isdigit():
                     html += f"<th>{jour}</th>"
             html += "</tr>"
-            
-            # Données des stars
             for r in range(11, 30):
                 nom = sheet.cell(row=r, column=1).value
-                if not nom:
-                    continue
+                if not nom: continue
                 html += f"<tr><td><b>{nom}</b></td>"
                 for c in range(2, 100, 3):
                     m = sheet.cell(row=r, column=c).value or ""
@@ -132,12 +122,12 @@ def get_planning():
                     s = sheet.cell(row=r, column=c+2).value or ""
                     html += f"<td>{m} {am} {s}</td>"
                 html += "</tr>"
-            html += "</table><br><br>"
-        
+            html += "</table><br>"
         return html
     except Exception as e:
         return f"<h2>Erreur : {str(e)}</h2>"
 
 if __name__ == '__main__':
-    print("🚀 Application démarrée sur http://127.0.0.1:5000")
+    print("🚀 Application démarrée")
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
