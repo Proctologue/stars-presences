@@ -8,44 +8,20 @@ app = Flask(__name__)
 
 EXCEL_FILE = os.path.join(os.path.dirname(__file__), "stars 3.xlsx")
 
-mois_feuilles = {1:"Janvier",2:"Février",3:"Mars",4:"Avril",5:"Mai",6:"Juin",
-                 7:"Juillet",8:"Aout",9:"Septembre",10:"Octobre",11:"Novembre",12:"Decembre"}
-
-def get_noms():
-    try:
-        wb = load_workbook(EXCEL_FILE, data_only=True)
-        sheet = wb["Noms des employés"]
-        noms = []
-        for r in range(1, 50):
-            cell = sheet.cell(row=r, column=1).value
-            if cell:
-                nom = str(cell).strip()
-                if nom and nom not in ["Noms des employés", ""]:
-                    noms.append(nom)
-        print(f"✅ {len(noms)} noms chargés : {noms}")
-        return noms
-    except Exception as e:
-        print(f"Erreur noms : {e}")
-        return ["Chloé", "Dorian", "Francky", "Jeremy", "Laurence", "Pouncho !"]
+# Noms forcés pour que ça marche tout de suite
+NOMS_FORCES = ["Chloé", "Dorian", "Francky", "Jeremy", "Laurence", "Pouncho !"]
 
 @app.route('/')
 def index():
-    return render_template('index.html', noms=get_noms())
+    return render_template('index.html', noms=NOMS_FORCES)
 
-# ================== LE RESTE DU CODE ==================
 def trouver_colonne_jour(sheet, jour):
     for row in range(1, 25):
         for col in range(1, 400):
             try:
                 val = sheet.cell(row=row, column=col).value
-                if val is None:
-                    continue
-                if isinstance(val, (int, float)):
-                    if int(val) == jour:
-                        return col
-                elif str(val).strip().isdigit():
-                    if int(str(val).strip()) == jour:
-                        return col
+                if val and str(val).strip().isdigit() and int(float(val)) == jour:
+                    return col
             except:
                 continue
     return None
@@ -59,7 +35,8 @@ def sauvegarder():
 
     try:
         date = datetime.strptime(date_str, "%Y-%m-%d")
-        sheet_name = mois_feuilles[date.month]
+        sheet_name = {1:"Janvier",2:"Février",3:"Mars",4:"Avril",5:"Mai",6:"Juin",
+                      7:"Juillet",8:"Aout",9:"Septembre",10:"Octobre",11:"Novembre",12:"Decembre"}[date.month]
         jour = date.day
     except:
         return jsonify({"success": False, "message": "Date invalide"})
@@ -67,6 +44,7 @@ def sauvegarder():
     wb = load_workbook(EXCEL_FILE)
     sheet = wb[sheet_name]
 
+    # Recherche nom
     row_nom = None
     nom_clean = str(nom).strip().lower()
     for r in range(1, 100):
@@ -75,8 +53,7 @@ def sauvegarder():
             if cell and str(cell).strip().lower() == nom_clean:
                 row_nom = r
                 break
-        if row_nom:
-            break
+        if row_nom: break
 
     if not row_nom:
         return jsonify({"success": False, "message": f"Nom '{nom}' non trouvé"})
@@ -97,37 +74,6 @@ def sauvegarder():
     wb.save(EXCEL_FILE)
     return jsonify({"success": True, "message": f"✅ Enregistré pour le {jour}/{date.month}"})
 
-@app.route('/planning')
-def get_planning():
-    try:
-        wb = load_workbook(EXCEL_FILE, data_only=True)
-        html = "<h1>📊 Planning Complet 2026</h1>"
-        for sheet_name in mois_feuilles.values():
-            if sheet_name not in wb: continue
-            sheet = wb[sheet_name]
-            html += f"<h2>{sheet_name}</h2><table border='1' style='border-collapse:collapse;width:100%'>"
-            html += "<tr><th>Nom</th>"
-            for c in range(2, 100, 3):
-                jour = sheet.cell(row=8, column=c).value
-                if jour and str(jour).isdigit():
-                    html += f"<th>{jour}</th>"
-            html += "</tr>"
-            for r in range(11, 30):
-                nom = sheet.cell(row=r, column=1).value
-                if not nom: continue
-                html += f"<tr><td><b>{nom}</b></td>"
-                for c in range(2, 100, 3):
-                    m = sheet.cell(row=r, column=c).value or ""
-                    am = sheet.cell(row=r, column=c+1).value or ""
-                    s = sheet.cell(row=r, column=c+2).value or ""
-                    html += f"<td>{m} {am} {s}</td>"
-                html += "</tr>"
-            html += "</table><br>"
-        return html
-    except Exception as e:
-        return f"<h2>Erreur : {str(e)}</h2>"
-
 if __name__ == '__main__':
-    print("🚀 Application démarrée")
+    print("🚀 Application démarrée avec noms forcés")
     app.run(host='0.0.0.0', port=5000, debug=True)
-    
