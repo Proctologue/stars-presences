@@ -120,23 +120,37 @@ def sauvegarder():
 def get_planning():
     try:
         wb = load_workbook(EXCEL_FILE, data_only=True)
-        data = {}
+        html = "<h1>Planning Complet 2026</h1>"
         
-        for sheet_name in mois_feuilles.values():
-            if sheet_name in wb:
-                sheet = wb[sheet_name]
-                rows = []
-                for r in range(10, 30):  # Lignes des stars
-                    row = []
-                    for c in range(1, 40):
-                        val = sheet.cell(row=r, column=c).value
-                        row.append(val if val is not None else "")
-                    if any(row):  # Si la ligne n'est pas vide
-                        rows.append(row)
-                data[sheet_name] = rows
-        return jsonify({"success": True, "data": data})
+        for sheet_name in ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", 
+                          "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre"]:
+            if sheet_name not in wb:
+                continue
+            sheet = wb[sheet_name]
+            html += f"<h2>{sheet_name}</h2><table border='1' style='border-collapse:collapse;'>"
+            
+            # En-têtes simplifiés
+            html += "<tr><th>Nom</th>"
+            for c in range(2, 100, 3):
+                jour = sheet.cell(row=8, column=c).value
+                if jour and str(jour).isdigit():
+                    html += f"<th>{jour}</th>"
+            html += "</tr>"
+            
+            # Les stars
+            for r in range(11, 30):
+                nom = sheet.cell(row=r, column=1).value
+                if not nom:
+                    continue
+                html += f"<tr><td><b>{nom}</b></td>"
+                for c in range(2, 100, 3):
+                    val_m = sheet.cell(row=r, column=c).value or ""
+                    val_am = sheet.cell(row=r, column=c+1).value or ""
+                    val_s = sheet.cell(row=r, column=c+2).value or ""
+                    html += f"<td>{val_m} {val_am} {val_s}</td>"
+                html += "</tr>"
+            html += "</table><br>"
+        
+        return html
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-if __name__ == '__main__':
-    print("🚀 Application démarrée sur http://127.0.0.1:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+        return f"Erreur : {str(e)}"
